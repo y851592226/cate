@@ -12,7 +12,7 @@ import (
 type AES struct {
 }
 
-func (_ AES) Encrypt(key, data []byte) ([]byte, error) {
+func (a AES) Encrypt(key, data []byte) ([]byte, error) {
 	iv := make([]byte, aes.BlockSize)
 	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
 		return nil, err
@@ -39,7 +39,7 @@ func padding(ciphertext []byte, blockSize int) []byte {
 	return newData
 }
 
-func (_ AES) Decrypt(key, data []byte) ([]byte, error) {
+func (a AES) Decrypt(key, data []byte) ([]byte, error) {
 	if len(data) < aes.BlockSize {
 		return nil, errors.New("data len must greater than 16")
 	}

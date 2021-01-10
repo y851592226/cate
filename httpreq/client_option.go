@@ -104,6 +104,7 @@ func SetClientDialContext(dialContext DialContext) ClientOptionFunc {
 	}
 }
 
+// nolint
 func SetClientDialTLS(dialTLS DialTLS) ClientOptionFunc {
 	return func(c *Client) error {
 		t, ok := c.client.Transport.(*http.Transport)

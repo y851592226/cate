@@ -231,6 +231,14 @@ func (a Array) AsInterfaceAt(i int, def ...interface{}) interface{} {
 	return append(def, nil)[0]
 }
 
+func (a Array) To(v interface{}) error {
+	data, err := json.Marshal(a)
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(data, v)
+}
+
 func (a Array) ToBoolAt(i int) (bool, error) {
 	if a.Exists(i) {
 		return convert.ToBool(a[i])

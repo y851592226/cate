@@ -226,6 +226,14 @@ func (o Object) AsStringSlice(key string, def ...[]string) []string {
 	return append(def, nil)[0]
 }
 
+func (o Object) To(v interface{}) error {
+	data, err := json.Marshal(o)
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(data, v)
+}
+
 func (o Object) ToBool(key string) (bool, error) {
 	if o.Exists(key) {
 		return convert.ToBool(o[key])

@@ -27,7 +27,8 @@ var _ = Describe("Ttlcache", func() {
 			go func() {
 				for range time.Tick(time.Millisecond) {
 					atomic.AddInt32(&count, 1)
-					n, _ := cacher.Get(context.Background(), "hello")
+					n, err := cacher.Get(context.Background(), "hello")
+					Expect(err).ShouldNot(HaveOccurred())
 					if n.(int32) > 5 {
 						break
 					}

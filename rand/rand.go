@@ -33,6 +33,10 @@ const (
 	NumbersLetters      = Numbers + LowerLetters + UpperLetters
 )
 
+func init() {
+	InitSeed()
+}
+
 func InitSeed() {
 	rand.Seed(time.Now().UnixNano())
 }

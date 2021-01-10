@@ -13,6 +13,8 @@ type Encryper interface {
 type Encoder interface {
 	Encode(i interface{}) ([]byte, error)
 	Decode(data []byte, i interface{}) error
+	EncodeToString(i interface{}) (string, error)
+	DecodeString(s string, i interface{}) error
 }
 
 type encoder struct {
@@ -48,6 +50,30 @@ func (e *encoder) Decode(data []byte, i interface{}) error {
 		return err
 	}
 	data, err = e.encryper.Decrypt(e.key, decoded)
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(data, i)
+}
+
+func (e *encoder) EncodeToString(i interface{}) (string, error) {
+	data, err := json.Marshal(i)
+	if err != nil {
+		return "", err
+	}
+	ciphertext, err := e.encryper.Encrypt(e.key, data)
+	if err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(ciphertext), nil
+}
+
+func (e *encoder) DecodeString(s string, i interface{}) error {
+	decoded, err := hex.DecodeString(s)
+	if err != nil {
+		return err
+	}
+	data, err := e.encryper.Decrypt(e.key, decoded)
 	if err != nil {
 		return err
 	}
