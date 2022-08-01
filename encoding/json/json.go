@@ -2,6 +2,7 @@ package json
 
 import (
 	"encoding/json"
+	"fmt"
 
 	jsoniter "github.com/json-iterator/go"
 )
@@ -47,4 +48,8 @@ func MarshalIndentStringDef(v interface{}, def string) string {
 		return def
 	}
 	return string(data)
+}
+
+func PrettyPrint(v interface{}) {
+	fmt.Println(MarshalIndentString(v))
 }

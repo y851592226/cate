@@ -86,6 +86,41 @@ func (c *Client) Do(req *http.Request, options ...RequestOptionFunc) (*Response,
 	}
 	req = req.WithContext(ctx)
 
+	mws, ok := GetMiddlewares(ctx)
+	if !ok {
+		mws = []Middleware{}
+	}
+	debugBody, ok := GetDebug(ctx)
+	if ok {
+		mws = append(mws, DebugMW(debugBody))
+	} else if c.debug {
+		mws = append(mws, DebugMW(c.debugBody))
+	}
+
+	// add global middlewares
+	tmp := append(c.mws, globalUserDefinedMWs...)
+	mws = append(tmp, mws...)
+	endpoint := Chain(mws)(c.do)
+
+	retryTimes, _ := GetRetryTimes(ctx)
+	// do request
+	var resp *Response
+	for i := 0; i <= retryTimes; i++ {
+		err = setBody(ctx, req)
+		if err != nil {
+			continue
+		}
+		resp, err = endpoint(req)
+		if err != nil {
+			continue
+		}
+		return resp, err
+	}
+	return nil, err
+}
+
+func setBody(ctx context.Context, req *http.Request) error {
+	var err error
 	body, ok := GetBody(ctx)
 	rc, isReadCloser := body.(io.ReadCloser)
 	if !isReadCloser && body != nil {
@@ -139,7 +174,7 @@ func (c *Client) Do(req *http.Request, options ...RequestOptionFunc) (*Response,
 			var data []byte
 			data, err = json.Marshal(body)
 			if err != nil {
-				return nil, err
+				return err
 			}
 			req.Body = ioutil.NopCloser(bytes.NewReader(data))
 			req.ContentLength = int64(len(data))
@@ -154,37 +189,11 @@ func (c *Client) Do(req *http.Request, options ...RequestOptionFunc) (*Response,
 		} else {
 			req.Body, err = req.GetBody()
 			if err != nil {
-				return nil, err
+				return err
 			}
 		}
 	}
-	mws, ok := GetMiddlewares(ctx)
-	if !ok {
-		mws = []Middleware{}
-	}
-	debugBody, ok := GetDebug(ctx)
-	if ok {
-		mws = append(mws, DebugMW(debugBody))
-	} else if c.debug {
-		mws = append(mws, DebugMW(c.debugBody))
-	}
-
-	// add global middlewares
-	tmp := append(c.mws, globalUserDefinedMWs...)
-	mws = append(tmp, mws...)
-	endpoint := Chain(mws)(c.do)
-
-	retryTimes, _ := GetRetryTimes(ctx)
-	// do request
-	var resp *Response
-	for i := 0; i <= retryTimes; i++ {
-		resp, err = endpoint(req)
-		if err != nil {
-			continue
-		}
-		return resp, err
-	}
-	return nil, err
+	return nil
 }
 
 func (c *Client) do(req *http.Request) (*Response, error) {

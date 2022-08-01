@@ -15,8 +15,13 @@ type ObjectProcessor func(object Object, key string, value interface{}) error
 type Object map[string]interface{}
 
 func (o *Object) Scan(src interface{}) error {
-	b, ok := src.([]byte)
-	if !ok {
+	var b []byte
+	switch src := src.(type) {
+	case []byte:
+		b = src
+	case string:
+		b = []byte(src)
+	default:
 		return fmt.Errorf("unsupported type %T", src)
 	}
 	if len(b) == 0 {
